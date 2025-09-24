@@ -16,8 +16,8 @@
       }
 
       :root {
-        --red-accent: rgb(207, 61, 61);
-        --screen-color: hsl(0, 0%, 3%);
+        --red-accent: #cf3d3d;
+        --screen-color: hsl(0, 0%, 5%);
         --body-padding: 40px; /* Adjust this value to change the padding around the body */
       }
 
@@ -74,15 +74,20 @@
       }
       
       #grid {
-            --gridline-color: #f7861e;
-            --grid-size: 49px;
+            --gridline-color: rgba(247, 134, 28, 0.1);
+            --dot-color: #f7871e3a;
+            --grid-size: 36px;
             --gridline-size: 0px;
-            --dot-size: 5px;
+            --dot-size: 1px;
 
             background:
                 linear-gradient(to right,
                     var(--gridline-color) var(--gridline-size),
                     transparent calc(var(--gridline-size) + 1px)
+                ),
+                radial-gradient(circle at top left,
+                    var(--dot-color) var(--dot-size),
+                    transparent calc(var(--dot-size) + 1px)
                 ),
                 linear-gradient(to bottom,
                     var(--gridline-color) var(--gridline-size),

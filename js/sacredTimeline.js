@@ -10,12 +10,13 @@
     };
 
     const subBranchSettings = {
-      growthSpeed: 0.3, //default 0.05
+      growthSpeed: 0.1, //default 0.05
       maxLength: 150,
       width: 10,
       baseOffsetFactor: 1, // how much to push branch base out from main branch
       curveFactor: 0.3, // how much branches bow outward (0 = straight)
       curveStretch: 1.5, // stretch the curve along its length
+      inverseBend: true, // bend opposite direction if growing downward
       color: "#f7871eff",
     };
 
@@ -77,7 +78,7 @@
         let ny =  Math.cos(this.branchAngle);
 
         // flip the curve if the branch is growing downward
-        if (this.angleOffset > 0) {
+        if (subBranchSettings.inverseBend && this.angleOffset > 0) {
           nx *= -1;
           ny *= -1;
         }
@@ -88,7 +89,6 @@
         context.beginPath();
         context.moveTo(this.baseX, this.baseY);
         context.quadraticCurveTo(controlX, controlY, this.endX, this.endY);
-
         context.strokeStyle = subBranchSettings.color;
         context.lineWidth = subBranchSettings.width;
         context.lineCap = "round";
@@ -97,9 +97,12 @@
     }
 
     // define sub branches here (index, angleOffset)
-    branches.push(new Branch(200, -Math.PI / 4));
-    branches.push(new Branch(400, Math.PI / 6));
-    branches.push(new Branch(600, -Math.PI / 5));
+    branches.push(new Branch(200, -Math.PI / 4.5));
+    branches.push(new Branch(400, Math.PI / 5.2));
+    branches.push(new Branch(600, -Math.PI / 6.4));
+    branches.push(new Branch(800, Math.PI / 4));
+    branches.push(new Branch(1000, -Math.PI / 5.8));
+    branches.push(new Branch(1200, Math.PI / 6));
 
     function thicknessAtX(x) {
       const center = canvas.width / 2;
@@ -123,6 +126,10 @@
         branchPoints.push({ x, y, thickness });
       }
 
+      // glow for sub branches
+        context.shadowColor = subBranchSettings.color;
+        context.shadowBlur = 15;
+
       // draw sub branches (before main branch so they appear behind)
       branches.forEach(function(branch) {
         const baseIdx = branch.xIndex;
@@ -132,6 +139,21 @@
           branch.drawSubBranch(context);
         }
       });
+
+      context.shadowBlur = 0; // no shadow on main branch. To many segments causes lag
+
+      // draw main branch glow first (single blurred stroke)
+      context.save();
+      context.filter = "blur(30px)";
+      context.strokeStyle = "rgba(255, 255, 255, 0.22)";
+      context.lineWidth = mainBranchSettings.maxWidth * 2; // thicker halo
+      context.beginPath();
+      context.moveTo(branchPoints[0].x, branchPoints[0].y);
+      for (let i = 1; i < branchPoints.length; i++) {
+        context.lineTo(branchPoints[i].x, branchPoints[i].y);
+      }
+      context.stroke();
+      context.restore();
 
       // draw main branch as many small segments so width can vary smoothly
       for (let i = 0; i < branchPoints.length - 1; i++) {
@@ -144,6 +166,7 @@
         context.lineWidth = (p0.thickness + p1.thickness) / 2;
         context.strokeStyle = "white";
         context.lineCap = "round";
+
         context.stroke();
       }
 
