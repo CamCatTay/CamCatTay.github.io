@@ -108,3 +108,10 @@
         user-select: none;
       letter-spacing: 3px;
     }
+
+    canvas {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
