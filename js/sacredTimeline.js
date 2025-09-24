@@ -7,6 +7,7 @@
       minWidth: 5,
       maxWidth: 30,
       profileExponent: 2.0, // higher = tighter to center
+      mobileGlow: false, // simpler glow effect for mobile compatibility (very ugly though, better to disable)
     };
 
     const subBranchSettings = {
@@ -36,10 +37,12 @@
     let time = 0;
     let branches = [];
     class Branch {
-      constructor(xIndex, angleOffset = 0) {
-        this.xIndex = xIndex;
+      constructor(xPercent, angleOffset = 0) {
+        this.xPercent = xPercent;
+        this.xIndex = Math.floor(canvas.width * this.xPercent);
         this.length = 0;
         this.angleOffset = angleOffset;
+
         this.baseX = 0;
         this.baseY = 0;
         this.endX = 0;
@@ -47,7 +50,7 @@
       }
 
       update(baseX, baseY, branchPoints) {
-
+        this.xIndex = Math.floor(canvas.width * this.xPercent); 
         this.baseX = baseX;
         // offset the sub branch y position so it doesn't start inside the main branch
         this.baseY = baseY + (branchPoints[this.xIndex] ? branchPoints[this.xIndex].thickness / 2 * subBranchSettings.baseOffsetFactor * this.angleOffset : 0);
@@ -96,13 +99,13 @@
       }
     }
 
-    // define sub branches here (index, angleOffset)
-    branches.push(new Branch(200, -Math.PI / 4.5));
-    branches.push(new Branch(400, Math.PI / 5.2));
-    branches.push(new Branch(600, -Math.PI / 6.4));
-    branches.push(new Branch(800, Math.PI / 4));
-    branches.push(new Branch(1000, -Math.PI / 5.8));
-    branches.push(new Branch(1200, Math.PI / 6));
+    // define sub branches here 
+    branches.push(new Branch(0.1, -Math.PI / 4));
+    branches.push(new Branch(0.2, Math.PI / 6)); 
+    branches.push(new Branch(0.3, -Math.PI / 5));
+    branches.push(new Branch(0.5, -Math.PI / 4));
+    branches.push(new Branch(0.7, Math.PI / 6)); 
+    branches.push(new Branch(0.9, -Math.PI / 5));
 
     function thicknessAtX(x) {
       const center = canvas.width / 2;
@@ -111,6 +114,12 @@
       const t = Math.max(0, 1 - Math.pow(distNorm, mainBranchSettings.profileExponent));
       return mainBranchSettings.minWidth + t * (mainBranchSettings.maxWidth - mainBranchSettings.minWidth);
     }
+
+    function isMobile() {
+      return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    const useMobileGlow = isMobile();
 
     function drawBranches() {
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -142,18 +151,33 @@
 
       context.shadowBlur = 0; // no shadow on main branch. To many segments causes lag
 
-      // draw main branch glow first (single blurred stroke)
-      context.save();
-      context.filter = "blur(30px)";
-      context.strokeStyle = "rgba(255, 255, 255, 0.22)";
-      context.lineWidth = mainBranchSettings.maxWidth * 2; // thicker halo
-      context.beginPath();
-      context.moveTo(branchPoints[0].x, branchPoints[0].y);
-      for (let i = 1; i < branchPoints.length; i++) {
-        context.lineTo(branchPoints[i].x, branchPoints[i].y);
+      if (useMobileGlow) {
+        if (mainBranchSettings.mobileGlow) {
+          // draw main branch glow (,obile-safe)
+          context.strokeStyle = "rgba(255,255,255,0.25)";
+          context.lineWidth = mainBranchSettings.maxWidth * 0; // thicker halo
+          context.lineCap = "round";
+          context.beginPath();
+          context.moveTo(branchPoints[0].x, branchPoints[0].y);
+          for (let i = 1; i < branchPoints.length; i++) {
+            context.lineTo(branchPoints[i].x, branchPoints[i].y);
+          }
+          context.stroke();
+        }
+      } else {
+          // draw main branch glow (computer-safe)
+          context.save();
+          context.filter = "blur(30px)";
+          context.strokeStyle = "rgba(255, 255, 255, 0.22)";
+          context.lineWidth = mainBranchSettings.maxWidth * 2; // thicker halo
+          context.beginPath();
+          context.moveTo(branchPoints[0].x, branchPoints[0].y);
+          for (let i = 1; i < branchPoints.length; i++) {
+            context.lineTo(branchPoints[i].x, branchPoints[i].y);
+          }
+          context.stroke();
+          context.restore();
       }
-      context.stroke();
-      context.restore();
 
       // draw main branch as many small segments so width can vary smoothly
       for (let i = 0; i < branchPoints.length - 1; i++) {
@@ -183,4 +207,9 @@
     // Resize handling
     window.addEventListener("resize", function() {
       resizeCanvas();
+
+      // if window size changes immediately this makes sure xIndex values are correct
+      branches.forEach(function(branch) {
+      branch.xIndex = Math.floor(canvas.width * branch.xPercent);
+      });
     });
