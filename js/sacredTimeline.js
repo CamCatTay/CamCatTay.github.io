@@ -165,17 +165,8 @@
           }
           context.stroke();
           context.restore();
-      } else {
-        // non chromium based browser friendly glow
-          context.strokeStyle = "rgba(255,255,255,0.25)";
-          context.lineWidth = mainBranchSettings.maxWidth * 0; // thicker halo
-          context.lineCap = "round";
-          context.beginPath();
-          context.moveTo(branchPoints[0].x, branchPoints[0].y);
-          for (let i = 1; i < branchPoints.length; i++) {
-            context.lineTo(branchPoints[i].x, branchPoints[i].y);
-          }
       }
+      
 
       // draw main branch as many small segments so width can vary smoothly
       for (let i = 0; i < branchPoints.length - 1; i++) {
