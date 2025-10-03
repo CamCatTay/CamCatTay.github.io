@@ -1,3 +1,4 @@
+    // for displaying a element that contains the current date
     const statusElement = document.getElementById("status");
 
     function formatDate(date) {

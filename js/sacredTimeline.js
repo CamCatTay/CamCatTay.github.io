@@ -7,7 +7,7 @@
       minWidth: 5,
       maxWidth: 30,
       profileExponent: 2.0, // higher = tighter to center
-      mobileGlow: false, // simpler glow effect for mobile compatibility (very ugly though, better to disable)
+      compatibleGlow: false, // simpler glow effect for mobile compatibility (very ugly though, better to disable)
     };
 
     const subBranchSettings = {
@@ -115,11 +115,11 @@
       return mainBranchSettings.minWidth + t * (mainBranchSettings.maxWidth - mainBranchSettings.minWidth);
     }
 
-    function isMobile() {
-      return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    function isCompatible() {
+      return CSS.supports("backdrop-filter", "blur(5px)");
     }
 
-    const useMobileGlow = isMobile();
+    const useCompatibleGlow = isCompatible();
 
     function drawBranches() {
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -151,21 +151,9 @@
 
       context.shadowBlur = 0; // no shadow on main branch. To many segments causes lag
 
-      if (useMobileGlow) {
-        if (mainBranchSettings.mobileGlow) {
-          // draw main branch glow (,obile-safe)
-          context.strokeStyle = "rgba(255,255,255,0.25)";
-          context.lineWidth = mainBranchSettings.maxWidth * 0; // thicker halo
-          context.lineCap = "round";
-          context.beginPath();
-          context.moveTo(branchPoints[0].x, branchPoints[0].y);
-          for (let i = 1; i < branchPoints.length; i++) {
-            context.lineTo(branchPoints[i].x, branchPoints[i].y);
-          }
+      if (useCompatibleGlow) {
           context.stroke();
-        }
-      } else {
-          // draw main branch glow (computer-safe)
+          // draw main branch glow
           context.save();
           context.filter = "blur(30px)";
           context.strokeStyle = "rgba(255, 255, 255, 0.22)";
@@ -177,6 +165,16 @@
           }
           context.stroke();
           context.restore();
+      } else {
+        // non chromium based browser friendly glow
+          context.strokeStyle = "rgba(255,255,255,0.25)";
+          context.lineWidth = mainBranchSettings.maxWidth * 0; // thicker halo
+          context.lineCap = "round";
+          context.beginPath();
+          context.moveTo(branchPoints[0].x, branchPoints[0].y);
+          for (let i = 1; i < branchPoints.length; i++) {
+            context.lineTo(branchPoints[i].x, branchPoints[i].y);
+          }
       }
 
       // draw main branch as many small segments so width can vary smoothly
