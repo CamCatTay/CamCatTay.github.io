@@ -115,12 +115,6 @@
       return mainBranchSettings.minWidth + t * (mainBranchSettings.maxWidth - mainBranchSettings.minWidth);
     }
 
-    function isCompatible() {
-      return CSS.supports("backdrop-filter", "blur(5px)");
-    }
-
-    const useCompatibleGlow = isCompatible();
-
     function drawBranches() {
       context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -136,8 +130,8 @@
       }
 
       // glow for sub branches
-        context.shadowColor = subBranchSettings.color;
-        context.shadowBlur = 15;
+      context.shadowColor = subBranchSettings.color;
+      context.shadowBlur = 15;
 
       // draw sub branches (before main branch so they appear behind)
       branches.forEach(function(branch) {
@@ -151,6 +145,7 @@
 
       context.shadowBlur = 0; // no shadow on main branch. To many segments causes lag
 
+      /* once css feature detection is implemented use this for the glow of the main branch
       if (useCompatibleGlow) {
           context.stroke();
           // draw main branch glow
@@ -166,6 +161,7 @@
           context.stroke();
           context.restore();
       }
+      */
       
 
       // draw main branch as many small segments so width can vary smoothly
